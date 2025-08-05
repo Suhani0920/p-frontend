@@ -3,7 +3,7 @@ import * as signalR from "@microsoft/signalr";
 import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack";
 
 const connection = new signalR.HubConnectionBuilder()
-    .withUrl("http://localhost:5224/callHub")
+    .withUrl("https://prop-backend-cszs.onrender.com/callHub")
     // Add the MessagePack protocol to the connection
     .withHubProtocol(new MessagePackHubProtocol())
     .withAutomaticReconnect()

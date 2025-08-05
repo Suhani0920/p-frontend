@@ -41,7 +41,7 @@ function App() {
 
   const fetchCustomerDetails = async (phoneNumber) => {
     try {
-      const response = await fetch(`http://localhost:5224/api/customers/lookup?phoneNumber=${phoneNumber}`);
+      const response = await fetch(`https://prop-backend-cszs.onrender.com/api/customers/lookup?phoneNumber=${phoneNumber}`);
       if (!response.ok) throw new Error('Unknown Caller');
       const data = await response.json();
       setCustomer(data);
