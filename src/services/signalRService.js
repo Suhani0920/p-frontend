@@ -1,22 +1,30 @@
 import * as signalR from "@microsoft/signalr";
-// Import the MessagePack protocol
 import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack";
 
 const connection = new signalR.HubConnectionBuilder()
     .withUrl("https://prop-backend-cszs.onrender.com/callHub")
-    // Add the MessagePack protocol to the connection
     .withHubProtocol(new MessagePackHubProtocol())
     .withAutomaticReconnect()
     .build();
 
-export const startSignalRConnection = async () => {
+// NEW: Function to notify the app about connection status changes
+export const setConnectionStatusCallback = (callback) => {
+    connection.onreconnecting(() => callback("Reconnecting..."));
+    connection.onreconnected(() => callback("Connected"));
+    connection.onclose(() => callback("Disconnected"));
+};
+
+export const startSignalRConnection = async (callback) => {
     if (connection.state === signalR.HubConnectionState.Disconnected) {
         try {
+            callback("Connecting...");
             await connection.start();
             console.log("SignalR Connected using MessagePack.");
+            callback("Connected");
         } catch (err) {
             console.error("SignalR Connection Error: ", err);
-            setTimeout(startSignalRConnection, 5000);
+            callback("Disconnected");
+            setTimeout(() => startSignalRConnection(callback), 5000);
         }
     }
 };

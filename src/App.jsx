@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import * as signalR from "@microsoft/signalr";
-import signalRConnection, { startSignalRConnection } from './services/signalRService';
+import signalRConnection, { startSignalRConnection, setConnectionStatusCallback } from './services/signalRService';
 import './App.css';
 
 function App() {
+  // --- NEW: State for connection status ---
+  const [signalRStatus, setSignalRStatus] = useState('Connecting...');
+  
   const [callStatus, setCallStatus] = useState('idle');
   const [incomingNumber, setIncomingNumber] = useState('');
   const [customer, setCustomer] = useState(null);
   const [error, setError] = useState('');
   const [callId, setCallId] = useState('');
   const [joinCallId, setJoinCallId] = useState('');
-  
-  // --- NEW: State for the demo panel ---
   const [demoPhoneNumber, setDemoPhoneNumber] = useState('');
 
   const localStreamRef = useRef(null);
@@ -19,7 +20,9 @@ function App() {
   const audioWorkletNodeRef = useRef(null);
 
   useEffect(() => {
-    startSignalRConnection();
+    // Pass the setSignalRStatus function to the service
+    startSignalRConnection(setSignalRStatus);
+    setConnectionStatusCallback(setSignalRStatus);
 
     signalRConnection.on("IncomingCall", (phoneNumber) => {
       setCallStatus('ringing');
@@ -50,15 +53,10 @@ function App() {
     }
   };
 
-  // --- NEW: Function to simulate a call from the UI ---
   const handleSimulateCall = async () => {
-    if (!demoPhoneNumber) {
-        alert("Please enter a phone number to simulate a call.");
-        return;
-    }
+    if (!demoPhoneNumber) return alert("Please enter a phone number.");
     console.log(`Simulating call from ${demoPhoneNumber}...`);
     try {
-        // This is the same action Postman was doing
         await fetch(`https://prop-backend-cszs.onrender.com/api/customers/incoming-call`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -66,12 +64,12 @@ function App() {
         });
     } catch (err) {
         console.error("Failed to simulate call:", err);
-        alert("Failed to connect to the backend. Please ensure it's running.");
+        alert("Failed to connect to the backend.");
     }
   };
 
+  // ... (startAudioStreaming, playAudioChunk, handleAnswer, handleJoinCall, stopAllAudio, handleDecline, handleHangUp functions remain unchanged)
   const startAudioStreaming = async (currentCallId) => {
-    // ... (This function remains unchanged)
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       localStreamRef.current = stream;
@@ -92,7 +90,6 @@ function App() {
   };
 
   const playAudioChunk = (chunk) => {
-    // ... (This function remains unchanged)
     if (!audioContextRef.current) return;
     const pcm16 = new Int16Array(chunk.buffer);
     const float32 = new Float32Array(pcm16.length);
@@ -121,7 +118,6 @@ function App() {
   };
 
   const stopAllAudio = () => {
-    // ... (This function remains unchanged)
     if (localStreamRef.current) localStreamRef.current.getTracks().forEach(track => track.stop());
     if (audioContextRef.current) audioContextRef.current.close();
     if (audioWorkletNodeRef.current) audioWorkletNodeRef.current.disconnect();
@@ -162,6 +158,10 @@ function App() {
 
   return (
     <div className="container">
+      {/* --- NEW: Connection Status Header --- */}
+      <div className={`status-header status-${signalRStatus.toLowerCase()}`}>
+        Backend Status: {signalRStatus}
+      </div>
       <h1>PropVivo Support Portal</h1>
       <div className="portal-grid">
         <div className="call-control-panel">
@@ -185,15 +185,16 @@ function App() {
           <h2>Customer Panel</h2>
           <p>To join a call, enter the Call ID provided by the agent.</p>
           <input type="text" placeholder="Enter Call ID" value={joinCallId} onChange={(e) => setJoinCallId(e.target.value)} className="call-id-input" />
-          <button onClick={handleJoinCall} className="btn btn-join">Join Call</button>
+          {/* --- UPDATED: Button is disabled until connected --- */}
+          <button onClick={handleJoinCall} className="btn btn-join" disabled={signalRStatus !== 'Connected'}>Join Call</button>
         </div>
       </div>
-      {/* --- NEW: Demo Panel --- */}
       <div className="demo-panel">
         <h3>Demo Controls</h3>
-        <p>Use this to simulate a call from a customer. Add a customer to the database first using your API.</p>
+        <p>Use this to simulate a call from a customer.</p>
         <input type="text" placeholder="Enter customer phone number" value={demoPhoneNumber} onChange={(e) => setDemoPhoneNumber(e.target.value)} className="call-id-input" />
-        <button onClick={handleSimulateCall} className="btn btn-join">Simulate Incoming Call</button>
+        {/* --- UPDATED: Button is disabled until connected --- */}
+        <button onClick={handleSimulateCall} className="btn btn-join" disabled={signalRStatus !== 'Connected'}>Simulate Incoming Call</button>
       </div>
     </div>
   );

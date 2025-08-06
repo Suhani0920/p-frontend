@@ -144,3 +144,25 @@ h2 {
   margin-top: 0;
   color: #005A9C;
 }
+.status-header {
+  text-align: center;
+  padding: 0.5rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  font-weight: 500;
+  color: white;
+  transition: background-color 0.5s ease;
+}
+.status-connecting, .status-reconnecting... {
+  background-color: #ff9800; /* Orange */
+}
+.status-connected {
+  background-color: #4caf50; /* Green */
+}
+.status-disconnected {
+  background-color: #f44336; /* Red */
+}
+.btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
