@@ -130,3 +130,17 @@ h2 {
 .btn-join:hover {
   background-color: #166fe5;
 }
+
+.demo-panel {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border: 1px dashed #005A9C;
+  border-radius: 6px;
+  background-color: #f0f8ff;
+  text-align: center;
+}
+
+.demo-panel h3 {
+  margin-top: 0;
+  color: #005A9C;
+}
